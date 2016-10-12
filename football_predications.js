@@ -108,7 +108,9 @@ function collectHomeAwayTeamGoalStatistics(gameData) {
 function calculateRatios(stats) {
 	var ratios={};
 
-	for(var teamName in stats.teams) {
+	var sortedTeams=Object.keys(stats.teams).sort();
+	for(var i in sortedTeams) {
+		var teamName = sortedTeams[i];
 		ratios[teamName]={};
 		print("team "+teamName+" "+stats.teams[teamName].goalsFor+" "+stats.mean.goalsFor);
 		ratios[teamName].attack=
