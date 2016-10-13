@@ -71,10 +71,11 @@ function loadData(csvPath) {
 		teamStats.total=total;
 		teamStats.mean={};
 		teamStats.mean.played=total.played/count;
-		teamStats.mean.goalsFor=total.goalsFor/count;
-		teamStats.mean.goalAgainst=total.goalAgainst/count;
-		teamStats.mean.meanGoalsAgainst=total.meanGoalsAgainst/count;
-		teamStats.mean.meanGoalsFor=total.meanGoalsFor/count;
+		print("average number of games played: " +teamStats.mean.played);
+		teamStats.mean.goalsFor=total.goalsFor/teamStats.mean.played;
+		teamStats.mean.goalAgainst=total.goalAgainst/teamStats.mean.played;
+		teamStats.mean.meanGoalsAgainst=total.meanGoalsAgainst/teamStats.mean.played;
+		teamStats.mean.meanGoalsFor=total.meanGoalsFor/teamStats.mean.played;
 
 		return teamStats;
 	}
@@ -111,8 +112,13 @@ function loadData(csvPath) {
 		for(var i in sortedTeams) {
 			var teamName = sortedTeams[i];
 			ratios[teamName]={};
+			var mean=stats.mean.goalsFor;
+			print("played: "+stats.teams[teamName].played);
+			if (stats.teams[teamName].played < 19) {
+				mean=stats.teams[teamName].goalsFor;
+			}
 			ratios[teamName].attack=
-				stats.teams[teamName].goalsFor/stats.mean.goalsFor;
+				stats.teams[teamName].goalsFor/mean;
 
 			ratios[teamName].meanGoalsFor=stats.teams[teamName].meanGoalsFor;
 

@@ -13,7 +13,6 @@ var averages=loadedData.averages;
 
 var printJson=function(s) {print(JSON.stringify(s))};
 
-print(JSON.stringify(averages));
 
 function poisson(k,lambda) {
 
@@ -31,10 +30,9 @@ function poisson(k,lambda) {
 function probabilityOfMatch(homeTeam,awayTeam,homeGoals,awayGoals) {
 	var goalExp=goalExpectancy(homeTeam,awayTeam);
 
+	//print("goal exp: "+JSON.stringify(goalExp));
 	var pHomeGoals=poisson(homeGoals,goalExp.home);
 	var pAwayGoals=poisson(awayGoals,goalExp.away);
-
-	print("homeGoals= "+pHomeGoals+" "+awayGoals+" "+pAwayGoals);
 
 	return pHomeGoals*pAwayGoals;
 }
@@ -101,16 +99,22 @@ function resolveOutcome(pHome,pAway,pDraw) {
 }
 
 function calculateProb(homeTeam,awayTeam) {
-	var gaoExp=probabilityOfMatch(homeTeam,awayTeam,1,1);
-
-	print(JSON.stringify(gaoExp));
 
 	var scoreGeneration = new ScoreGeneration();
 	var generateScores = scoreGeneration.nextScore;
 	var pHomeWin=0; var pAwayWin=0; var pDraw=0;
+	var largestProb=0; var outcome="";
 	for (var score=generateScores(); score != null; score=generateScores()) {
 		var homeWin=probabilityOfMatch(homeTeam,awayTeam,score.h,score.a);
+		if (homeWin > largestProb) {
+			largestProb = homeWin;
+			outcome="1";
+		}
 		var awayWin=probabilityOfMatch(homeTeam,awayTeam,score.a,score.h);
+		if (awayWin > largestProb) {
+			largestProb = awayWin;
+			outcome="2";
+		}
 
 		pHomeWin+=homeWin;
 		pAwayWin+=awayWin;
@@ -119,21 +123,40 @@ function calculateProb(homeTeam,awayTeam) {
 	for (var score=0; score<=10; score++) {
 		var draw=probabilityOfMatch(homeTeam,awayTeam,score,score);
 		pDraw+=draw;
+		if (draw > largestProb) {
+			largestProb = homeWin;
+			outcome="X";
+		}
 	}
 	return {
 		pHomeWin: pHomeWin,
 		pAwayWin: pAwayWin,
-		pDraw: pDraw
+		pDraw: pDraw,
+		outcome: outcome
 	};
 }
 
 function printMatchOutcome(teamA,teamB) {
 	var prob=calculateProb(teamA,teamB);
-	printJson(prob);
 	var outcome=resolveOutcome(prob.pHomeWin,prob.pAwayWin,prob.pDraw);
 	print (teamA+"-"+teamB+": "+outcome);
 
 }
 
-printMatchOutcome("Lazio","Juventus");
+var matches=[
+	["Napoli","Roma"],
+	["Pescara","Sampdoria"],
+	["Juventus","Udinese"],
+	["Fiorentina","Atalanta"],
+	["Genoa","Empoli"],
+	["Inter","Cagliari"],
+	["Lazio","Bologna"],
+	["Sassuolo","Crotone"],
+	["Chievo","Milan"],
+	["Palermo","Torino"]
+];
+
+for (var x=0; x<matches.length; x++) {
+	printMatchOutcome(matches[x][0],matches[x][1]);
+}
 
