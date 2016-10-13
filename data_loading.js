@@ -1,4 +1,4 @@
-function FootballPredictions() {
+function loadData(csvPath) {
 	var Files=Java.type('java.nio.file.Files');
 	var Charset = Java.type('java.nio.charset.Charset'); 
 	var Paths=Java.type('java.nio.file.Paths');
@@ -22,7 +22,7 @@ function FootballPredictions() {
 
 	function loadGameData() {
 		var gameDetails=[];
-		var lines=Files.newBufferedReader(Paths.get("seriea.csv"),
+		var lines=Files.newBufferedReader(Paths.get(csvPath),
 										  Charset.forName('UTF-8'));
 
 
@@ -31,7 +31,6 @@ function FootballPredictions() {
 			var splitLine=line.split(",");
 			var homeTeam=splitLine[CSV_COLS.HomeTeam]; 
 			if (homeTeam && homeTeam.trim()) {
-				print("home team "+homeTeam);
 				var gameDetail=buildGameStatistic(homeTeam,
 												  splitLine[CSV_COLS.awayTeam],
 												  1*splitLine[CSV_COLS.homeTeamGoals],
@@ -58,7 +57,6 @@ function FootballPredictions() {
 		mean={};
 		var count=0;
 		for (var teamName in teamStats.teams) {
-			print("teamName: "+teamName);
 			var statsOfTeam = teamStats.teams[teamName];
 			statsOfTeam.meanGoalsFor=statsOfTeam.goalsFor/statsOfTeam.played;
 			statsOfTeam.meanGoalsAgainst=statsOfTeam.goalAgainst/statsOfTeam.played;
@@ -116,6 +114,8 @@ function FootballPredictions() {
 			ratios[teamName].attack=
 				stats.teams[teamName].goalsFor/stats.mean.goalsFor;
 
+			ratios[teamName].meanGoalsFor=stats.teams[teamName].meanGoalsFor;
+
 			ratios[teamName].defence=
 				stats.teams[teamName].goalAgainst/stats.mean.goalAgainst;
 		}
@@ -129,6 +129,8 @@ function FootballPredictions() {
 			print(teamName+"\t\t"+teamRatios.homeAttack+"\t"+
 				teamRatios.homeDefence+"\t"+
 				teamRatios.awayAttack+"\t"+
+				teamRatios.meanGoalsHome+"z\t"+
+				teamRatios.meanGoalsAway+"\t"+
 				teamRatios.awayDefence);
 		}
 
@@ -144,10 +146,14 @@ function FootballPredictions() {
 			ratio.homeDefence=homeStats.defence.toFixed(2);
 			ratio.awayAttack=awayStat.attack.toFixed(2);
 			ratio.awayDefence=awayStat.defence.toFixed(2);
+			ratio.meanGoalsHome=homeStats.meanGoalsFor.toFixed(2);
+			ratio.meanGoalsAway=awayStat.meanGoalsFor.toFixed(2);
 
 			ratios[teamName]=ratio;
 
 		}
+
+		return ratios;
 	}
 
 	var gameData=loadGameData();
@@ -156,13 +162,21 @@ function FootballPredictions() {
 	var homeStats=extractAveragesFromTeamStats(allStats.home);
 	var awayStats=extractAveragesFromTeamStats(allStats.away);
 
+	var averages= {
+		averageGoalsHome: homeStats.mean.meanGoalsFor.toFixed(2),
+		averageGoalsAway: awayStats.mean.meanGoalsFor.toFixed(2)
+	};
+
 	var homeRatios=calculateRatios(homeStats);
 	var awayRatios=calculateRatios(awayStats);
 
+	var homeAwayRatios=extractRatios(homeRatios,awayRatios);
+
 	return {
-		ratios: extractRatios(homeRatios,awayRatios),
-		printRatios:printRatios
-	}
+		ratios: homeAwayRatios,
+		printRatios:printRatios,
+		averages: averages
+	};
 
 
 }
